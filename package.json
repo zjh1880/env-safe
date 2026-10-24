@@ -1,0 +1,44 @@
+{
+  "name": "env-safe",
+  "version": "1.1.0",
+  "description": "Validate .env files against .env.example before deploy.",
+  "license": "MIT",
+  "author": "Fast GitHub Labs",
+  "type": "commonjs",
+  "main": "src/env-safe.js",
+  "bin": {
+    "env-safe": "src/env-safe.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "lint": "node --check src/env-safe.js && node --check tests/env-safe.test.js && node --check web/js/engine.js && node --check web/js/app.js",
+    "ci": "npm run lint && npm test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zjh1880/env-safe.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zjh1880/env-safe/issues"
+  },
+  "homepage": "https://github.com/zjh1880/env-safe#readme",
+  "files": [
+    "src",
+    "docs",
+    "examples",
+    "README.md",
+    "README.zh.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dotenv",
+    "env",
+    "environment",
+    "cli",
+    "deployment",
+    "validation"
+  ]
+}

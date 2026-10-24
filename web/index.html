@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src data:; connect-src 'none'">
+<title>EnvSafe 配置安全体检站</title>
+<meta name="description" content="在浏览器本地检查 .env 与 .env.example：缺失变量、空值、占位符、弱密钥与格式错误。零上传、零依赖、离线可用。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230B6E5F'/%3E%3Cpath d='M8 17h4l2-5 4 10 2-5h4' fill='none' stroke='%23F7F4EC' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<a class="skip" href="#workspace">跳到体检区</a>
+
+<header class="topbar">
+  <a class="brand" href="#top" aria-label="EnvSafe 配置安全体检站首页">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 40 40"><path d="M20 4l12 5v9c0 8-5 14-12 17C13 32 8 26 8 18V9l12-5z" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 20h4l2.2-5 3.4 9 2.2-4H28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span>
+    <span class="brand-text">
+      <strong>EnvSafe</strong>
+      <em>配置安全体检站</em>
+    </span>
+  </a>
+  <nav class="nav" aria-label="页面导航">
+    <a href="#workspace">体检</a>
+    <a href="#rules">规则</a>
+    <a href="#about">说明</a>
+  </nav>
+  <span class="privacy-badge"><i></i>本地处理 · 零上传</span>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <p class="kicker">ENVIRONMENT CONFIG CHECKUP</p>
+    <h1>给配置做一次体检</h1>
+    <p class="lede">把 <code>.env</code> 与 <code>.env.example</code> 放进来，几十秒找出缺失、空值、占位符与弱密钥。所有解析都在你的浏览器里完成，配置不离开这台设备。</p>
+    <div class="hero-meta">
+      <span>纯前端 · 零依赖 · 离线可用</span>
+      <span>不上传 · 不联网 · 不留存</span>
+    </div>
+  </section>
+
+  <section id="workspace" class="workspace" aria-label="配置输入区" tabindex="-1">
+    <div class="panel" data-drop="example">
+      <header class="panel-head">
+        <div class="panel-title">
+          <span class="dot dot-example" aria-hidden="true"></span>
+          <h2>.env.example</h2>
+          <span class="hint">提交到仓库的模板</span>
+        </div>
+        <button type="button" class="ghost small" data-upload="example" aria-label="上传 .env.example 文件">上传文件</button>
+      </header>
+      <textarea id="exampleInput" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="NODE_ENV=development&#10;PORT=3000&#10;JWT_SECRET=replace-me&#10;?SENTRY_DSN=" aria-label=".env.example 内容"></textarea>
+      <footer class="panel-foot"><span id="exampleCount">0 行</span><span class="drop-hint">拖拽 .env.example 到这里</span></footer>
+      <input type="file" id="exampleFile" accept=".example,.env,text/plain" hidden>
+    </div>
+
+    <div class="panel" data-drop="env">
+      <header class="panel-head">
+        <div class="panel-title">
+          <span class="dot dot-env" aria-hidden="true"></span>
+          <h2>.env</h2>
+          <span class="hint">本地运行配置</span>
+        </div>
+        <button type="button" class="ghost small" data-upload="env" aria-label="上传 .env 文件">上传文件</button>
+      </header>
+      <textarea id="envInput" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="NODE_ENV=production&#10;PORT=3000&#10;JWT_SECRET=替换为真实密钥&#10;DEBUG_MODE=true" aria-label=".env 内容"></textarea>
+      <footer class="panel-foot"><span id="envCount">0 行</span><span class="drop-hint">拖拽 .env 到这里</span></footer>
+      <input type="file" id="envFile" accept=".env,.example,text/plain" hidden>
+    </div>
+  </section>
+
+  <section class="controls" aria-label="体检设置">
+    <label class="field">
+      <span>额外密钥字段</span>
+      <input id="secretKeys" type="text" placeholder="如 JWT_SECRET, DB_PASSWORD（逗号分隔）" autocomplete="off">
+    </label>
+    <label class="field field-min">
+      <span>最小密钥长度</span>
+      <input id="minSecret" type="number" min="1" max="128" value="8" inputmode="numeric">
+    </label>
+    <div class="actions">
+      <button type="button" class="ghost" id="loadSample">载入示例</button>
+      <button type="button" class="ghost" id="clearAll">清空</button>
+      <button type="button" class="primary" id="runCheck">开始体检 <kbd>Ctrl ↵</kbd></button>
+    </div>
+  </section>
+
+  <section id="report" class="report" aria-label="体检报告">
+    <p id="reportStatus" class="sr-only" role="status" aria-live="polite"></p>
+    <div class="report-empty" id="reportEmpty">
+      <span class="pulse" aria-hidden="true"></span>
+      <h2>尚未体检</h2>
+      <p>填入两份配置后点击「开始体检」，报告会出现在这里。</p>
+    </div>
+
+    <div class="report-body" id="reportBody" hidden>
+      <div class="report-head">
+        <div class="score-wrap">
+          <svg class="gauge" viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="gauge-track" cx="60" cy="60" r="52"></circle>
+            <circle class="gauge-value" id="gaugeValue" cx="60" cy="60" r="52"></circle>
+          </svg>
+          <div class="score-num"><strong id="scoreValue">0</strong><span>/100</span></div>
+        </div>
+        <div class="report-summary">
+          <p class="report-kicker">CHECKUP REPORT</p>
+          <h2 id="reportTitle">体检完成</h2>
+          <p id="reportLede"></p>
+          <div class="chips" id="severityChips" role="group" aria-label="按严重程度筛选">
+            <button type="button" class="chip is-active" data-filter="all" aria-pressed="true">全部 <b id="countAll">0</b></button>
+            <button type="button" class="chip chip-error" data-filter="error" aria-pressed="false">错误 <b id="countError">0</b></button>
+            <button type="button" class="chip chip-warning" data-filter="warning" aria-pressed="false">警告 <b id="countWarning">0</b></button>
+            <button type="button" class="chip chip-info" data-filter="info" aria-pressed="false">提示 <b id="countInfo">0</b></button>
+          </div>
+        </div>
+        <div class="report-actions">
+          <button type="button" class="ghost" id="exportMd" disabled>导出报告 .md</button>
+          <button type="button" class="ghost" id="exportJson" disabled>导出 .json</button>
+        </div>
+      </div>
+
+      <div class="report-stats" id="reportStats"></div>
+      <div class="issue-list" id="issueList"></div>
+    </div>
+  </section>
+
+  <section id="rules" class="rules">
+    <div class="section-head">
+      <p class="kicker">RULESET</p>
+      <h2>九类检查，每一类都讲清"为什么"</h2>
+      <p class="section-lede">规则集是 env-safe CLI 的<b>超集</b>：它额外检查连接串弱口令、未加引号的空格、小写键名，并按键名自动识别密钥字段；CLI 版则另有 <code>--strict</code> 与 <code>--allow-extra</code>。报告不只告诉你哪里错，还给出现象、风险、改法与验证方式。</p>
+    </div>
+    <div class="rule-grid">
+      <article class="rule"><span>01</span><h3>缺失必需变量</h3><p>模板里声明、运行时却没有。应用可能启动失败，或悄悄回退到默认值。</p></article>
+      <article class="rule"><span>02</span><h3>未声明的多余变量</h3><p>团队不知道它存在，换环境容易漏配；也可能是拼写错误，实际并未生效。</p></article>
+      <article class="rule"><span>03</span><h3>必需变量为空</h3><p>空值在多数运行时等同于未配置，鉴权或连接会直接失败。</p></article>
+      <article class="rule"><span>04</span><h3>占位符未替换</h3><p>replace-me、dummy、dev 被当成真实密钥使用，服务鉴权失败且掩盖真问题。</p></article>
+      <article class="rule"><span>05</span><h3>密钥过短</h3><p>低于设定长度的密钥更容易被暴力破解，泄露后的攻击成本很低。</p></article>
+      <article class="rule"><span>06</span><h3>示例文件写入真实值</h3><p>模板会提交到仓库，真实密钥一旦进入版本历史，很难彻底清除。</p></article>
+      <article class="rule"><span>07</span><h3>连接串弱口令</h3><p>数据库连接串里的弱口令，是配置泄露后最容易被利用的入口。</p></article>
+      <article class="rule"><span>08</span><h3>重复键与格式错误</h3><p>后出现的值覆盖先出现的值；无法解析的行会让变量静默缺失。</p></article>
+      <article class="rule"><span>09</span><h3>空格与大小写</h3><p>未加引号的空格、混用大小写，会让不同环境读到不同的值。</p></article>
+    </div>
+  </section>
+
+  <section id="about" class="about">
+    <div class="about-copy">
+      <p class="kicker">PRIVACY BY DESIGN</p>
+      <h2>密钥不该离开你的设备</h2>
+      <p>体检站没有后端、没有数据库、没有统计埋点。页面不加载任何外部 CDN、字体或接口，断网也能用。你粘贴的内容只存在于当前标签页的内存里，关闭页面即消失。</p>
+      <p>需要接入提交前检查或 CI 时，可以使用同一项目的命令行版本（规则集相近但并非同一份实现，差异见上文「规则」一节）：</p>
+      <pre class="cli"><code>npm install -g env-safe
+env-safe check --example .env.example --env .env \
+  --secret-keys JWT_SECRET --min-secret-length 12</code></pre>
+    </div>
+    <aside class="about-card">
+      <h3>这次体检会看什么</h3>
+      <ul>
+        <li>模板与运行配置的变量差异</li>
+        <li>空值、占位符与过短密钥</li>
+        <li>示例文件里的真实值</li>
+        <li>连接串弱口令与重复键</li>
+        <li>格式错误、空格与大小写</li>
+      </ul>
+      <p class="about-note">报告可导出为 Markdown 或 JSON。导出内容只包含键名与问题描述，不会输出变量值的原文；即便如此，贴进公开 Issue 前仍建议自己通读一遍。</p>
+    </aside>
+  </section>
+</main>
+
+<footer class="footer">
+  <span>EnvSafe 配置安全体检站 · 基于开源项目 env-safe（MIT）</span>
+  <span>v1.1.0 · 纯前端 · 离线可用</span>
+</footer>
+
+<script src="js/engine.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

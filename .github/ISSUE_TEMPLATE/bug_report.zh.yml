@@ -1,0 +1,34 @@
+---
+name: Bug report / 缺陷报告
+description: 报告校验缺陷或 CLI 异常行为
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: env-safe 版本
+      placeholder: 1.1.0
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: 复现步骤
+      description: 请包含命令、示例文件内容和实际输出。
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+    validations:
+      required: true
+---
